@@ -1,6 +1,4 @@
 
-
-````markdown
 # 🔐 Password Strength Analyzer & Leak Checker
 
 A Python-based command-line tool to analyze password strength and detect if a password has been exposed in common hacker wordlists like `rockyou.txt`.
