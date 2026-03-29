@@ -7,7 +7,7 @@ A Python-based command-line tool to analyze password strength and detect if a pa
 
 ---
 
-![Screenshot](/passchecker/blob/main/passcheker.png)
+![Screenshot](passcheker.png)
 
 --- 
 
