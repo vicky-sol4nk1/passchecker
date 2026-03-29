@@ -7,26 +7,10 @@ A Python-based command-line tool to analyze password strength and detect if a pa
 
 ---
 
-## 🚀 Features
-
-- 🔍 Check password strength (Weak / Moderate / Strong)
-- 💡 Suggest improvements for weak passwords
-- ⚡ Generate strong random passwords
-- 🧠 Detect leaked passwords using wordlists
-- 📂 Supports:
-  - Default wordlists (auto-detect in current directory)
-  - Custom wordlists (user provided)
-- 🖥️ Clean and simple CLI interface
+![Screenshot](passchecker.png)
 
 ---
 
-## 🛠️ Tech Stack
-
-- Python 3
-- argparse (CLI handling)
-- Standard libraries (os, random, string)
-
----
 
 ## 📸 Example Usage
 
@@ -102,6 +86,18 @@ This project helped me understand:
 
 ---
 
+
+## 🚀 Features
+
+- 🔍 Check password strength (Weak / Moderate / Strong)
+- 💡 Suggest improvements for weak passwords
+- ⚡ Generate strong random passwords
+- 🧠 Detect leaked passwords using wordlists
+- 📂 Supports:
+  - Default wordlists (auto-detect in current directory)
+  - Custom wordlists (user provided)
+- 🖥️ Clean and simple CLI interface
+- 
 ## 📌 Future Improvements
 
 * 🌐 API integration (HaveIBeenPwned)
