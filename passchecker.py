@@ -1,119 +1,150 @@
 #!/usr/bin/env python3
 
-import re
 import argparse
 import random
 import string
+import os
 
-# -------------------------------
-# Password Strength Checker
-# -------------------------------
-def check_password_strength(password):
-    score = 0
+# ---------- Strength Checker ----------
+def check_strength(password):
+    length = len(password)
+    has_upper = any(c.isupper() for c in password)
+    has_lower = any(c.islower() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    has_special = any(not c.isalnum() for c in password)
+
+    score = sum([has_upper, has_lower, has_digit, has_special])
+
+    if length < 6 or score <= 1:
+        return "Weak"
+    elif length >= 8 and score >= 3:
+        return "Strong"
+    else:
+        return "Moderate"
+
+
+# ---------- Suggest Improvements ----------
+def suggest(password):
     suggestions = []
 
-    if len(password) >= 8:
-        score += 1
-    else:
-        suggestions.append("Increase length to at least 8 characters")
-
-    if re.search(r"[A-Z]", password):
-        score += 1
-    else:
+    if not any(c.isupper() for c in password):
         suggestions.append("Add uppercase letters")
-
-    if re.search(r"[a-z]", password):
-        score += 1
-    else:
+    if not any(c.islower() for c in password):
         suggestions.append("Add lowercase letters")
-
-    if re.search(r"[0-9]", password):
-        score += 1
-    else:
-        suggestions.append("Include numbers")
-
-    if re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-        score += 1
-    else:
+    if not any(c.isdigit() for c in password):
+        suggestions.append("Add numbers")
+    if not any(not c.isalnum() for c in password):
         suggestions.append("Add special characters")
 
-    if score == 5:
-        strength = "Very Strong 💪"
-    elif score >= 3:
-        strength = "Moderate ⚠️"
-    else:
-        strength = "Weak ❌"
-
-    return strength, suggestions
+    return suggestions
 
 
-# -------------------------------
-# Strong Password Generator
-# -------------------------------
-def generate_strong_password(length=12):
-    characters = string.ascii_letters + string.digits + "!@#$%^&*()"
-    password = ''.join(random.choice(characters) for _ in range(length))
-    return password
+# ---------- Generate Password ----------
+def generate_password(length):
+    chars = string.ascii_letters + string.digits + "!@#$%^&*()"
+    return ''.join(random.choice(chars) for _ in range(length))
 
 
-# -------------------------------
-# Improve Weak Password
-# -------------------------------
-def suggest_stronger_version(password):
-    improved = password
+# ---------- Load Wordlist ----------
+def load_wordlist(path):
+    if not path or not os.path.exists(path):
+        return set()
 
-    if not re.search(r"[A-Z]", improved):
-        improved += random.choice(string.ascii_uppercase)
-
-    if not re.search(r"[0-9]", improved):
-        improved += str(random.randint(0, 9))
-
-    if not re.search(r"[!@#$%^&*]", improved):
-        improved += random.choice("!@#$%^&*")
-
-    if len(improved) < 8:
-        improved += ''.join(random.choice(string.ascii_letters) for _ in range(8 - len(improved)))
-
-    return improved
+    print(f"[+] Loading wordlist: {path}")
+    with open(path, "r", encoding="latin-1", errors="ignore") as f:
+        return set(line.strip() for line in f)
 
 
-# -------------------------------
-# CLI Arguments
-# -------------------------------
+# ---------- Default Wordlist ----------
+def load_default_wordlist():
+    possible_files = [
+        "rockyou.txt",
+        "passwords.txt",
+        "wordlist.txt",
+        "common.txt"
+    ]
+
+    # Check current directory first
+    for file in possible_files:
+        if os.path.exists(file):
+            print(f"[+] Found wordlist in current directory: {file}")
+            return load_wordlist(file)
+
+    # Optional: check common Linux paths (if user later uses Kali)
+    linux_paths = [
+        "/usr/share/wordlists/rockyou.txt"
+    ]
+
+    for path in linux_paths:
+        if os.path.exists(path):
+            return load_wordlist(path)
+
+    print("[!] No default wordlist found in current directory")
+    return set()
+
+
+# ---------- Leak Check ----------
+def check_leak(password, wordlist):
+    return password in wordlist
+
+
+# ---------- MAIN ----------
 def main():
-    parser = argparse.ArgumentParser(description="Password Strength Analyzer 🔐")
+    parser = argparse.ArgumentParser(
+        description="Password Strength Analyzer 🔐"
+    )
 
     parser.add_argument("password", nargs="?", help="Password to check")
     parser.add_argument("-g", "--generate", action="store_true", help="Generate strong password")
     parser.add_argument("-l", "--length", type=int, default=12, help="Length for generated password")
     parser.add_argument("-s", "--suggest", action="store_true", help="Suggest stronger version")
 
+    # NEW FEATURE 👇
+    parser.add_argument("-w", "--wordlist", help="Custom wordlist (rockyou.txt etc.)")
+    parser.add_argument("--check-leak", action="store_true", help="Check if password is leaked")
+
     args = parser.parse_args()
 
-    # Generate password
+    # ---------- Generate Mode ----------
     if args.generate:
-        print("Generated Password:", generate_strong_password(args.length))
+        pwd = generate_password(args.length)
+        print(f"\nGenerated Password: {pwd}\n")
         return
 
-    # Check password
-    if args.password:
-        strength, suggestions = check_password_strength(args.password)
+    if not args.password:
+        print("Please provide a password or use -g to generate one.")
+        return
 
-        print(f"\nPassword: {args.password}")
-        print(f"Strength: {strength}")
+    password = args.password
 
-        if suggestions:
-            print("\nSuggestions:")
-            for s in suggestions:
-                print(f"- {s}")
+    print(f"\nPassword: {password}")
 
-        # Suggest stronger version
-        if args.suggest:
-            improved = suggest_stronger_version(args.password)
-            print("\nSuggested Stronger Password:", improved)
+    # ---------- Strength ----------
+    strength = check_strength(password)
+    print(f"Strength: {strength} ⚠️" if strength != "Strong" else f"Strength: {strength} ✅")
 
-    else:
-        parser.print_help()
+    # ---------- Suggestions ----------
+    if args.suggest:
+        print("\nSuggestions:")
+        for s in suggest(password):
+            print(f"- {s}")
+
+    # ---------- Leak Check ----------
+    if args.check_leak:
+        if args.wordlist:
+            wl = load_wordlist(args.wordlist)
+        else:
+            wl = load_default_wordlist()
+
+        if wl:
+            if check_leak(password, wl):
+                print("\n[!] WARNING: Password found in hacker wordlist (LEAKED!) 🚨")
+            else:
+                print("\n[+] Password not found in wordlist ✅")
+        else:
+            print("\n[!] No wordlist found (skipping leak check)")
+
+    print()
 
 
 if __name__ == "__main__":
