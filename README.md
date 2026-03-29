@@ -37,6 +37,8 @@ python passchecker.py -g -l 16
 
 ### 🔹 Check if Password is Leaked
 
+Note:downoad rockyou.txt if youare running on windows,and put on tool current directory
+
 ```bash
 python passchecker.py password123 --check-leak
 ```
